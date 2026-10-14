@@ -125,3 +125,29 @@
   background-color: #78a5b4;
   color: #111827;
 }
+
+.ticket {
+  max-width: 450px;
+  margin: 30px auto;
+  padding: 24px;
+  text-align: center;
+  border: 2px dashed #16a34a;
+  border-radius: 12px;
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+.ticket-qr {
+  margin-top: 24px;
+}
+
+.booked-seat {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  margin: 5px;
+  border-radius: 6px;
+  cursor: not-allowed;
+  opacity: 0.8;
+}

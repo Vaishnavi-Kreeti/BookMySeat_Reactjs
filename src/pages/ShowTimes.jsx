@@ -5,6 +5,7 @@ function Showtimes() {
   const { id } = useParams();
   const [selectedShowtime, setSelectedShowtime] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
+
   const navigate = useNavigate();
   return (
     <div>

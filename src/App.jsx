@@ -4,7 +4,9 @@ import MovieDetails from "./pages/MovieDetails";
 import Showtimes from "./pages/ShowTimes";
 import Seat from "./pages/Seat";
 import Booking from "./pages/Booking";
-
+import Payment  from "./pages/Payment";
+import Ticket from "./pages/Ticket";
+import Admin from "./pages/Admin";
 function App() {
   return (
     <BrowserRouter>
@@ -14,6 +16,9 @@ function App() {
         <Route path="/moviedetails/:id/showtimes" element={<Showtimes />} />
         <Route path="/moviedetails/:id/seats" element={<Seat />} />
         <Route path="/moviedetails/:id/booking" element={<Booking />} />
+        <Route path="/moviedetails/:id/payment" element={<Payment/>}/>
+        <Route path="/moviedetails/:id/ticket" element={<Ticket/>}/>
+        <Route path="/admin" element={<Admin/>} />
       </Routes>
     </BrowserRouter>
   );
