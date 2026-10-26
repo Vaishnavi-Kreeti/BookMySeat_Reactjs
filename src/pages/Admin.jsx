@@ -5,11 +5,13 @@ function Admin() {
     const savedMovies = localStorage.getItem("movies");
     return savedMovies ? JSON.parse(savedMovies) : [];
   });
+  const [imageError, setImageError] = useState(false);
   const navigate = useNavigate();
   useEffect(() => {
     localStorage.setItem("movies", JSON.stringify(movies));
   }, [movies]);
   const [movieName, setMovieName] = useState("");
+  const [editingMovieId, setEditingMovieId] = useState(null);
   const [Genre, setGenre] = useState("");
   const [movieLength, setMovieLength] = useState("");
   const [Certification, setCertification] = useState("U");
@@ -18,6 +20,50 @@ function Admin() {
   const [shows, setShows] = useState([{ id: Date.now(), showtime: "", hallName: "" }]);
   const inputClass = "mt-2 min-h-11 w-full rounded-xl border border-white/15 bg-slate-950 px-3 text-white outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-400/10";
   const labelClass = "block text-sm font-semibold text-slate-300";
+//function to handle editing a movie
+function handleEditMovie(movie) {
+  setEditingMovieId(movie.id);
+  setMovieName(movie.name);
+  setGenre(movie.genre);
+  setMovieLength(
+    String(
+      Number.parseInt(movie.length.split("h")[0], 10) * 60 +
+      Number.parseInt(movie.length.split("h")[1], 10)
+    )
+  );
+  setCertification(movie.certification);
+  setFormat(movie.format);
+  setImage(movie.image);
+  setShows(
+    movie.shows.map((show) => ({
+      ...show,
+      id: Date.now() + Math.random(),
+    }))
+  );
+}
+
+function handleCancelEdit() {
+  const confirmed_edit=window.confirm("Are you sure you want to cancel editing? Unsaved changes will be lost.");
+  if(!confirmed_edit)return;
+  setEditingMovieId(null);
+  setMovieName("");
+  setGenre("");
+  setMovieLength("");
+  setCertification("U");
+  setFormat("2D");
+  setImage("");
+  setShows([{ id: Date.now(), showtime: "", hallName: "" }]);
+}
+  //Function to handle deleting a movie
+  function handleDeleteMovie(movieID){
+    const confirmed=window.confirm("Are you sure you want to delete this movie?");
+    if (confirmed) {
+      setMovies((prevMovies) => prevMovies.filter((movie) => movie.id !== movieID));
+    }
+    else{
+      return;
+    }
+  }
   // Function to handle adding a new showtime
   function handleAddShow() {
     setShows((prevShows) => [...prevShows, { id: Date.now(), showtime: "", hallName: "" }]);
@@ -25,10 +71,41 @@ function Admin() {
   // Function to handle form submission
   function handleSubmit(event) {
     event.preventDefault();
+    if (!movieName.trim() || !Genre.trim()) {
+  alert("Please enter the movie name and genre.");
+  return;
+}
+const duplicateMovie = movies.some(
+  (movie) =>
+    movie.name.trim().toLowerCase() ===
+      movieName.trim().toLowerCase() &&
+    movie.id !== editingMovieId
+);
+if (duplicateMovie) {
+  alert("A movie with this name already exists.");
+  return;
+}
     if (!movieLength || Number(movieLength) <= 0) {
       alert("Please enter a valid movie length.");
       return;
     }
+    const hasInvalidShow = shows.some(
+  (show) => !show.showtime || !show.hallName.trim()
+);
+
+if (hasInvalidShow) {
+  alert("Please enter a showtime and hall name for every show.");
+  return;
+}
+
+const showKeys = shows.map(
+  (show) => `${show.showtime}-${show.hallName.trim().toLowerCase()}`
+);
+
+if (new Set(showKeys).size !== showKeys.length) {
+  alert("Duplicate showtime and hall combinations are not allowed.");
+  return;
+}
     const movie = {
       id: Date.now(),
       name: movieName.trim(),
@@ -42,7 +119,24 @@ function Admin() {
         hallName: show.hallName.trim()
       })),
     };
-    setMovies((previousMovies) => [...previousMovies, movie]);
+    if (editingMovieId !== null) { setMovies((previousMovies) => previousMovies.map((existingMovie) =>existingMovie.id === editingMovieId ? { ...movie, id: editingMovieId }: existingMovie));
+} else {
+  setMovies((previousMovies) => [...previousMovies, movie]);
+}
+setMovieName("");
+setGenre("");
+setMovieLength("");
+setCertification("U");
+setFormat("2D");
+setImage("");
+setShows([
+  {
+    id: Date.now(),
+    showtime: "",
+    hallName: "",
+  },
+]);
+setEditingMovieId(null);
   }
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-10 text-white sm:px-8">
@@ -57,7 +151,7 @@ function Admin() {
         </header>
 
         <form className="rounded-3xl border border-white/10 bg-slate-900 p-6 sm:p-8" onSubmit={handleSubmit}>
-          <h2 className="text-xl font-bold">Add a movie</h2>
+          <h2 className="text-xl font-bold">{editingMovieId!==null ? "Edit movie" : "Add a movie"}</h2>
           <div className="mt-6 grid gap-5 sm:grid-cols-2">
             <label className={labelClass}>Movie name
               <input className={inputClass} type="text" value={movieName} required placeholder="Enter a movie name" onChange={(event) => setMovieName(event.target.value)} />
@@ -79,7 +173,23 @@ function Admin() {
               <input className={inputClass} type="number" min="1" value={movieLength} placeholder="e.g. 148" onChange={(event) => setMovieLength(event.target.value)} required />
             </label>
             <label className={labelClass}>Poster image URL
-              <input className={inputClass} type="url" required value={Image} placeholder="https://example.com/poster.jpg" onChange={(event) => setImage(event.target.value)} />
+              <input className={inputClass} type="url" required value={Image} placeholder="https://example.com/poster.jpg" onChange={(event) => {setImage(event.target.value);setImageError(false);}} />
+{Image.trim() && (
+  <>
+    <img
+      src={Image.trim()}
+      alt="Movie preview"
+      className="mt-3 h-40 w-28 rounded-lg object-cover"
+      onError={() => setImageError(true)}
+      onLoad={() => setImageError(false)}
+    />
+    {imageError && (
+      <p className="mt-2 text-sm text-red-400">
+        Unable to load image. Please check the URL.
+      </p>
+    )}
+  </>
+)}            
             </label>
           </div>
 
@@ -100,12 +210,19 @@ function Admin() {
                       setShows(updatedShows);
                     }} />
                   </label>
+                  <button type="button" onClick={()=>{
+                  if(shows.length===1){
+                    alert("A movie must have at least one show.");
+                    return;
+                  }
+                    setShows((prevShows) => prevShows.filter((shows) => shows.id !== show.id))}} className="rounded-lg bg-red-500/80 px-4 py-2 text-sm font-semibold hover:bg-red-400">Remove show</button>
                 </div>
               ))}
             </div>
             <div className="mt-5 flex flex-wrap gap-3">
               <button className="rounded-xl border border-violet-300/40 px-5 py-3 font-semibold text-violet-200 transition hover:bg-violet-300/10" type="button" onClick={handleAddShow}>+ Add show</button>
-              <button className="rounded-xl bg-violet-500 px-5 py-3 font-bold transition hover:bg-violet-400" type="submit">Add movie</button>
+              {editingMovieId!==null&&(<button type="button" onClick={handleCancelEdit} className="rounded-xl bg-gray-600 px-5 py-3 font-bold transition hover:bg-gray-500">Cancel</button>)}
+              <button className="rounded-xl bg-violet-500 px-5 py-3 font-bold transition hover:bg-violet-400" type="submit">{editingMovieId!==null?"Save Changes":"Add Movie"}</button>
             </div>
           </div>
         </form>
@@ -131,6 +248,10 @@ function Admin() {
                           {show.showtime} · {show.hallName}
                         </span>
                       ))}
+                    </div>
+                    <div className="mt-5 flex flex-wrap gap-3">
+                    <button type="button" onClick={()=>handleEditMovie(movie)} className="mt-4 rounded-xl bg-amber-500/80 px-4 py-2 text-sm font-semibold hover:bg-amber-400">Edit Movie</button>
+                    <button type="button" onClick={()=>handleDeleteMovie(movie.id)} className="mt-4 rounded-xl bg-red-500/80 px-4 py-2 text-sm font-semibold hover:bg-red-400">Delete Movie</button>
                     </div>
                   </div>
                 </article>

@@ -27,9 +27,7 @@ function Home() {
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-violet-300">Now showing</p>
             <h1 className="mt-2 text-4xl font-black tracking-tight sm:text-5xl">Movie Booking</h1>
           </div>
-          <Link to="/register" className="rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold text-white transition hover:border-violet-300 hover:bg-white/5">
-            Create account
-          </Link>
+          
         </header>
 
         <section aria-label="Available movies" className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">

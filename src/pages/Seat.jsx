@@ -15,16 +15,7 @@ function Seat() {
 
   const [bookedSeats] = useState(() => {
     const savedSeats = localStorage.getItem(bookingKey);
-    if (!savedSeats) {
-      return [];
-    }
-
-    try {
-      return JSON.parse(savedSeats);
-    } catch (error) {
-      console.error("Invalid booked seats data:", error);
-      return [];
-    }
+    return savedSeats ? JSON.parse(savedSeats) : [];
   });
 
   const rows = ["A", "B", "C", "D", "E"];

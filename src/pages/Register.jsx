@@ -1,6 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-
+import { useState} from "react";
+import { Link ,useNavigate } from "react-router-dom";
 function Register() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -9,20 +8,45 @@ function Register() {
     const [showPassword, setShowPassword] = useState(false);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
-
+    const navigate = useNavigate();
     function handleRegister(event) {
         event.preventDefault();
-
+        const savedUsers = JSON.parse(localStorage.getItem("users") || "[]");
         if (password !== confirmPassword) {
             setError("Your passwords don't match. Please check and try again.");
             setMessage("");
             return;
         }
+        const normalizedEmail = email.trim().toLowerCase();
 
-        setError("");
-        setMessage(
-            `Thanks, ${name.trim()}! Your details are valid. Connect a secure registration service to create your account; this demo does not store passwords.`
-        );
+const emailExists = savedUsers.some(
+    (user) => user.email === normalizedEmail
+);
+
+if (emailExists) {
+    setError("This email is already registered. Please log in instead.");
+    setMessage("");
+    return;
+}
+
+        const newUser = {
+    id: Date.now(),
+    name: name.trim(),
+    email: normalizedEmail,
+    role: "user",
+};
+
+savedUsers.push(newUser);
+
+localStorage.setItem("users", JSON.stringify(savedUsers));
+
+setError("");
+setMessage(`Welcome, ${name.trim()}! Your registration was successful.`);
+setName("");
+setEmail("");
+setPassword("");
+setConfirmPassword("");
+navigate("/login");
     }
 
     return (
@@ -82,56 +106,24 @@ function Register() {
                                 required
                                 minLength={8}
                             />
-                            <button
-                                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-sm font-bold text-violet-300 hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-violet-300"
-                                type="button"
-                                onClick={() => setShowPassword((visible) => !visible)}
-                                aria-label={showPassword ? "Hide passwords" : "Show passwords"}
-                            >
-                                {showPassword ? "Hide" : "Show"}
-                            </button>
+                            <button className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-sm font-bold text-violet-300 hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-violet-300" type="button" onClick={() => setShowPassword((visible) => !visible)}aria-label={showPassword ? "Hide passwords" : "Show passwords"}>{showPassword ? "Hide" : "Show"}</button>
                         </div>
-                        <span className="text-xs leading-relaxed text-slate-400">
-                            Use at least 8 characters for a stronger password.
-                        </span>
+                        <span className="text-xs leading-relaxed text-slate-400">Use at least 8 characters for a stronger password.</span>
                     </div>
-
                     <div className="grid gap-2">
                         <label className="text-sm font-semibold text-slate-200" htmlFor="confirm-password">Confirm password</label>
-                        <input
-                            className="min-h-12 rounded-xl border border-white/15 bg-slate-950 px-4 text-white outline-none transition placeholder:text-slate-600 focus:border-violet-400 focus:ring-4 focus:ring-violet-400/15"
-                            id="confirm-password"
-                            type={showPassword ? "text" : "password"}
-                            value={confirmPassword}
-                            autoComplete="new-password"
-                            placeholder="Enter your password again"
-                            onChange={(event) => setConfirmPassword(event.target.value)}
-                            required
-                            minLength={8}
-                        />
+                        <input className="min-h-12 rounded-xl border border-white/15 bg-slate-950 px-4 text-white outline-none transition placeholder:text-slate-600 focus:border-violet-400 focus:ring-4 focus:ring-violet-400/15" id="confirm-password" type={showPassword ? "text" : "password"} value={confirmPassword} autoComplete="new-password" placeholder="Enter your password again" onChange={(event) => setConfirmPassword(event.target.value)}required minLength={8}/>
                     </div>
-
                     {error && (
-                        <p className="rounded-xl border border-red-300/20 bg-red-400/10 px-4 py-3 text-sm leading-relaxed text-red-200" role="alert">
-                            {error}
-                        </p>
-                    )}
+                        <p className="rounded-xl border border-red-300/20 bg-red-400/10 px-4 py-3 text-sm leading-relaxed text-red-200" role="alert">{error}</p>)}
                     {message && (
-                        <p className="rounded-xl border border-emerald-300/20 bg-emerald-400/10 px-4 py-3 text-sm leading-relaxed text-emerald-200" role="status">
-                            {message}
-                        </p>
-                    )}
-
-                    <button className="min-h-12 rounded-xl bg-violet-500 px-5 font-bold text-white shadow-lg shadow-violet-950/30 transition hover:-translate-y-0.5 hover:bg-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:ring-offset-2 focus:ring-offset-slate-900" type="submit">
-                        Create account
-                    </button>
-                    <p className="-mt-2 text-center text-xs leading-relaxed text-slate-400">
-                        Your password is never saved by this demo.
-                    </p>
+                        <p className="rounded-xl border border-emerald-300/20 bg-emerald-400/10 px-4 py-3 text-sm leading-relaxed text-emerald-200" role="status">{message}</p>)}
+                    <button className="min-h-12 rounded-xl bg-violet-500 px-5 font-bold text-white shadow-lg shadow-violet-950/30 transition hover:-translate-y-0.5 hover:bg-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:ring-offset-2 focus:ring-offset-slate-900" type="submit">Create account</button>
+                    <p className="-mt-2 text-center text-xs leading-relaxed text-slate-400">Your password is never saved by this demo.</p>
+                    <p className="text-center text-sm text-slate-400">Already have an account? <Link to="/login" className="text-violet-300 hover:underline">Login</Link> </p>
                 </form>
             </section>
         </main>
     );
 }
-
 export default Register;
