@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector,useDispatch } from "react-redux";
+import { addMovie,updateMovie,deleteMovie } from "../redux/moviesSlice";
 function Admin() {
-  const [movies, setMovies] = useState(() => {
-    const savedMovies = localStorage.getItem("movies");
-    return savedMovies ? JSON.parse(savedMovies) : [];
-  });
+const movies=useSelector((state)=>state.movies.movies);
+const dispatch=useDispatch()
   const [imageError, setImageError] = useState(false);
   const navigate = useNavigate();
   useEffect(() => {
@@ -55,25 +55,21 @@ function handleCancelEdit() {
   setShows([{ id: Date.now(), showtime: "", hallName: "" }]);
 }
   //Function to handle deleting a movie
-  function handleDeleteMovie(movieID){
-    const confirmed=window.confirm("Are you sure you want to delete this movie?");
-    if (confirmed) {
-      setMovies((prevMovies) => prevMovies.filter((movie) => movie.id !== movieID));
-    }
-    else{
-      return;
-    }
-  }
-  // Function to handle adding a new showtime
-  function handleAddShow() {
-    setShows((prevShows) => [...prevShows, { id: Date.now(), showtime: "", hallName: "" }]);
-  }
+function handleDeleteMovie(movieID){
+  const confirmed=window.confirm("Are you sure you want to delete this movie?");
+  if(!confirmed)return;
+  dispatch(deleteMovie(movieID));
+}
+// Function to handle adding a new showtime
+function handleAddShow() {
+  setShows((prevShows) => [...prevShows, { id: Date.now(), showtime: "", hallName: "" }]);
+}
   // Function to handle form submission
-  function handleSubmit(event) {
-    event.preventDefault();
-    if (!movieName.trim() || !Genre.trim()) {
-  alert("Please enter the movie name and genre.");
-  return;
+function handleSubmit(event) {
+event.preventDefault();
+if (!movieName.trim() || !Genre.trim()) {
+alert("Please enter the movie name and genre.");
+return;
 }
 const duplicateMovie = movies.some(
   (movie) =>
@@ -119,9 +115,10 @@ if (new Set(showKeys).size !== showKeys.length) {
         hallName: show.hallName.trim()
       })),
     };
-    if (editingMovieId !== null) { setMovies((previousMovies) => previousMovies.map((existingMovie) =>existingMovie.id === editingMovieId ? { ...movie, id: editingMovieId }: existingMovie));
+  if (editingMovieId !== null) { 
+    dispatch(updateMovie({...movie,id:editingMovieId}));
 } else {
-  setMovies((previousMovies) => [...previousMovies, movie]);
+  dispatch(addMovie(movie));
 }
 setMovieName("");
 setGenre("");

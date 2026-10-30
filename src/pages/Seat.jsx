@@ -1,38 +1,47 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-
+import { useNavigate, useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { toggleSeat } from "../redux/bookingSlice";
 function Seat() {
   const { id } = useParams();
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const savedMovies = JSON.parse(localStorage.getItem("movies") || "[]");
+  const dispatch = useDispatch();
+  const booking = useSelector((state) => state.booking.currentBooking);
+  const bookedSeatsByShow = useSelector((state) => state.booking.bookedSeatsByShow);
+  const savedMovies = useSelector((state)=>state.movies.movies);
   const movie = savedMovies.find((movie) => movie.id === Number(id));
-  const date = searchParams.get("date");
-  const time = searchParams.get("time");
-  const hallName = searchParams.get("hallName");
-  const bookingKey = `bookedSeats-${id}-${date}-${time}-${hallName}`;
-  const storageKey = `selectedSeats-${id}-${date}-${time}-${hallName}`;
-
-  const [bookedSeats] = useState(() => {
-    const savedSeats = localStorage.getItem(bookingKey);
-    return savedSeats ? JSON.parse(savedSeats) : [];
-  });
+  const isMatchingDraft =
+    booking?.movieId === Number(id) && booking.status === "draft";
+  const date = isMatchingDraft ? booking.date : "";
+  const time = isMatchingDraft ? booking.time : "";
+  const hallName = isMatchingDraft ? booking.hallName : "";
+  const selectedSeats = isMatchingDraft ? booking.selectedSeats : [];
+  const showKey = isMatchingDraft
+    ? `${booking.movieId}|${booking.date}|${booking.time}|${booking.hallName}`
+    : "";
+  const bookedSeats = bookedSeatsByShow[showKey] || [];
 
   const rows = ["A", "B", "C", "D", "E"];
   const seatNumbers = [1, 2, 3, 4, 5];
-  const [selectedSeats, setSelectedSeats] = useState(() => {
-    const savedSeats = localStorage.getItem(storageKey);
-    return savedSeats ? JSON.parse(savedSeats) : [];
-  });
-
-  useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(selectedSeats));
-  }, [storageKey, selectedSeats]);
-
   const pricePerSeat = 200;
 
   if (!movie) {
     return <main className="grid min-h-screen place-items-center bg-slate-950 text-3xl font-bold text-white">Movie not found</main>;
+  }
+
+  if (!isMatchingDraft) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-slate-950 text-center text-white">
+        <div>
+          <p className="text-xl font-bold">Choose a showtime first</p>
+          <button
+            className="mt-4 rounded-xl bg-violet-500 px-5 py-3 font-semibold"
+            onClick={() => navigate(`/moviedetails/${id}/showtimes`)}
+          >
+            Back to showtimes
+          </button>
+        </div>
+      </main>
+    );
   }
 
   return (
@@ -71,19 +80,7 @@ function Seat() {
                             ? "bg-violet-500 text-white shadow-lg shadow-violet-950/40"
                             : "bg-emerald-600 text-white hover:bg-emerald-500"
                         }`}
-                      onClick={() => {
-                        if (isBooked) return;
-
-                        if (isSelected) {
-                          setSelectedSeats(
-                            selectedSeats.filter(
-                              (selectedSeat) => selectedSeat !== seat
-                            )
-                          );
-                        } else {
-                          setSelectedSeats([...selectedSeats, seat]);
-                        }
-                      }}
+                      onClick={() => dispatch(toggleSeat(seat))}
                     >
                       {seat}
                     </button>
@@ -113,17 +110,7 @@ function Seat() {
             {selectedSeats.length > 0 && (
               <button
                 className="rounded-xl bg-violet-500 px-5 py-3 font-bold transition hover:bg-violet-400"
-                onClick={() =>
-                  navigate(`/moviedetails/${id}/booking`, {
-                    state: {
-                      selectedSeats,
-                      date,
-                      time,
-                      hallName,
-                      totalPrice: selectedSeats.length * pricePerSeat,
-                    },
-                  })
-                }
+                onClick={() => navigate(`/moviedetails/${id}/booking`)}
               >
                 Confirm Booking
               </button>

@@ -1,11 +1,7 @@
 import Moviecard from "../components/Moviecard";
-import { Link } from "react-router-dom";
-
+import { useSelector } from "react-redux";
 function Home() {
-  const movies = (() => {
-    const savedMovies = localStorage.getItem("movies");
-    return savedMovies ? JSON.parse(savedMovies) : [];
-  })();
+  const movies = useSelector((state)=>state.movies.movies);
 
   if (movies.length === 0) {
     return (

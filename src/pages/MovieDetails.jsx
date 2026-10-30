@@ -1,15 +1,9 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 function MovieDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [movies, setMovies] = useState([]);
-  useEffect(() => {
-    const savedMovies = localStorage.getItem("movies");
-    if (savedMovies) {
-      setMovies(JSON.parse(savedMovies));
-    }
-  }, []);
+  const movies=useSelector((state)=>(state.movies.movies));
   const movie = movies.find((movie) => movie.id === parseInt(id));
   if (!movie) {
     return (

@@ -1,13 +1,15 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
-
+import { useSelector,useDispatch } from "react-redux";
+import { startBooking } from "../redux/bookingSlice";
 function Showtimes() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [selectedShowIndex, setSelectedShowIndex] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
-  const savedMovies = JSON.parse(localStorage.getItem("movies") || "[]");
+  const savedMovies = useSelector((state)=>state.movies.movies);
   const movie = savedMovies.find((movie) => movie.id === Number(id));
+  const dispatch=useDispatch();
   if (!movie) {
     return <h2>Movie not found</h2>;
   }
@@ -31,8 +33,7 @@ function Showtimes() {
             type="date"
             value={selectedDate}
             onChange={(event) => setSelectedDate(event.target.value)}
-            required
-          />
+            required/>
         </div>
 
         <fieldset className="mt-8">
@@ -42,8 +43,7 @@ function Showtimes() {
               {shows.map((show, index) => (
                 <label
                   className={`flex cursor-pointer items-center gap-4 rounded-2xl border p-4 transition ${selectedShowIndex === String(index) ? "border-violet-400 bg-violet-400/10 ring-2 ring-violet-400/20" : "border-white/10 bg-slate-950 hover:border-white/25"}`}
-                  key={`${show.showtime}-${show.hallName}-${index}`}
-                >
+                  key={`${show.showtime}-${show.hallName}-${index}`}>
                   <input
                     className="h-4 w-4 accent-violet-400"
                     type="radio"
@@ -67,11 +67,17 @@ function Showtimes() {
         {selectedDate && selectedShow && (
           <button
             className="mt-8 rounded-xl bg-violet-500 px-6 py-3 font-bold text-white transition hover:bg-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:ring-offset-2 focus:ring-offset-slate-900"
-            onClick={() =>
-              navigate(
-                `/moviedetails/${id}/seats?date=${selectedDate}&time=${encodeURIComponent(selectedShow.showtime)}&hallName=${encodeURIComponent(selectedShow.hallName)}`
-              )
-            }
+            onClick={()=>{
+              dispatch(
+                startBooking({
+                  movieId:Number(id),
+                  date:selectedDate,
+                  time:selectedShow.showtime,
+                  hallName:selectedShow.hallName,
+                })
+              );
+              navigate(`/moviedetails/${id}/seats?date=${selectedDate}&time=${encodeURIComponent(selectedShow.showtime)}&hallName=${encodeURIComponent(selectedShow.hallName)}`);
+            }}
           >
             Select Seats
           </button>

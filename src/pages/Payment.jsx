@@ -1,10 +1,10 @@
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
-
+import { useSelector } from 'react-redux';
 function Payment() {
   const location = useLocation();
   const navigate = useNavigate();
   const { id } = useParams();
-  const savedMovies = JSON.parse(localStorage.getItem("movies") || "[]");
+  const savedMovies = useSelector((state)=>state.movies.movies);
   const movie = savedMovies.find((movie) => movie.id === Number(id));
   const { selectedSeats, date, time, hallName, totalPrice } = location.state || {};
   if (!movie) {

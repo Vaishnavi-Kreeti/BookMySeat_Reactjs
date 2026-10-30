@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
-
+import { useSelector} from "react-redux";
 function Ticket() {
     const location = useLocation();
     const { id } = useParams();
-    const savedMovies = JSON.parse(localStorage.getItem("movies") || "[]");
+    const savedMovies = useSelector((state)=>state.movies.movies);
     const movie = savedMovies.find((movie) => movie.id === Number(id));
     const { selectedSeats, date, time, hallName, totalPrice } = location.state || {};
     const cancellationKey = `cancelled-${id}-${date}-${time}-${hallName}-${[...(selectedSeats || [])].sort().join("-")}`;
@@ -26,7 +26,16 @@ function Ticket() {
 
     function handleCancelBooking() {
         const bookingKey = `bookedSeats-${id}-${date}-${time}-${hallName}`;
-        const existingSeats = JSON.parse(localStorage.getItem(bookingKey) || "[]");
+        let existingSeats = [];
+        try {
+        existingSeats = JSON.parse(localStorage.getItem(bookingKey) || "[]");
+
+        if (!Array.isArray(existingSeats)) {
+        existingSeats = [];
+        }
+        } catch (error) {
+        console.error("Invalid booked seats data:", error);
+        }
         const updatedSeats = existingSeats.filter(
             (seat) => !selectedSeats.includes(seat)
         );
