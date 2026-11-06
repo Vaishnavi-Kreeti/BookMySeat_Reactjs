@@ -1,34 +1,39 @@
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { login } from "../redux/authSlice";
+
 function Login() {
     const navigate = useNavigate();
-    const {login} = useAuth();
+    const dispatch = useDispatch();
+    const savedUsers = useSelector((state) => state.users.users);
     const [email, setEmail] = useState("");
     const [error, setError] = useState("");
+
     function handleLogin(event) {
         event.preventDefault();
-        let savedUsers;
-        try {savedUsers = JSON.parse(localStorage.getItem("users") || "[]");
-        } 
-        catch {setError("Unable to read saved accounts. Please try registering again.");
-            return;
-        }
-        if (!Array.isArray(savedUsers)) {
-            setError("Unable to read saved accounts. Please try registering again.");
-            return;
-        }
+
         const normalizedEmail = email.trim().toLowerCase();
-        const user = savedUsers.find((savedUser) => savedUser.email?.trim().toLowerCase() === normalizedEmail);
+        const user = savedUsers.find(
+            (savedUser) => savedUser.email?.trim().toLowerCase() === normalizedEmail
+        );
+
         if (!user) {
             setError("No account found with this email. Please register first.");
             return;
         }
-// This demo identifies users by email; registration intentionally does not store passwords.
-        login({id: user.id,name: user.name,email: user.email,role: user.role});
+
+        dispatch(login({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+        }));
+
         setError("");
-        navigate("/");
+        navigate(user.role === "admin" ? "/admin" : "/", { replace: true });
     }
+
     return (
         <div className="grid min-h-screen place-items-center bg-slate-950 px-4 py-10 text-white">
             <section className="w-full max-w-lg rounded-3xl border border-white/10 bg-slate-900 p-6 shadow-2xl shadow-black/30 sm:p-10" aria-labelledby="login-title">
@@ -50,5 +55,8 @@ function Login() {
                     Doesn't have an account? <Link to="/register" className="text-violet-300 hover:underline">Create account</Link>
                 </p>
             </section>
-        </div>);}
+        </div>
+    );
+}
+
 export default Login;

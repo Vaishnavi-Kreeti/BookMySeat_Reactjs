@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector,useDispatch } from "react-redux";
 import { addMovie,updateMovie,deleteMovie } from "../redux/moviesSlice";
@@ -7,9 +7,6 @@ const movies=useSelector((state)=>state.movies.movies);
 const dispatch=useDispatch()
   const [imageError, setImageError] = useState(false);
   const navigate = useNavigate();
-  useEffect(() => {
-    localStorage.setItem("movies", JSON.stringify(movies));
-  }, [movies]);
   const [movieName, setMovieName] = useState("");
   const [editingMovieId, setEditingMovieId] = useState(null);
   const [Genre, setGenre] = useState("");

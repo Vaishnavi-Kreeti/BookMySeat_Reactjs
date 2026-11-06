@@ -1,5 +1,8 @@
-import { useState} from "react";
-import { Link ,useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { registerUser } from "../redux/usersSlice";
+
 function Register() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -9,44 +12,45 @@ function Register() {
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
     const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const savedUsers = useSelector((state) => state.users.users);
+
     function handleRegister(event) {
         event.preventDefault();
-        const savedUsers = JSON.parse(localStorage.getItem("users") || "[]");
+
         if (password !== confirmPassword) {
             setError("Your passwords don't match. Please check and try again.");
             setMessage("");
             return;
         }
+
         const normalizedEmail = email.trim().toLowerCase();
+        const emailExists = savedUsers.some(
+            (user) => user.email?.trim().toLowerCase() === normalizedEmail
+        );
 
-const emailExists = savedUsers.some(
-    (user) => user.email === normalizedEmail
-);
-
-if (emailExists) {
-    setError("This email is already registered. Please log in instead.");
-    setMessage("");
-    return;
-}
+        if (emailExists) {
+            setError("This email is already registered. Please log in instead.");
+            setMessage("");
+            return;
+        }
 
         const newUser = {
-    id: Date.now(),
-    name: name.trim(),
-    email: normalizedEmail,
-    role: "user",
-};
+            id: Date.now(),
+            name: name.trim(),
+            email: normalizedEmail,
+            role: "customer",
+        };
 
-savedUsers.push(newUser);
+        dispatch(registerUser(newUser));
 
-localStorage.setItem("users", JSON.stringify(savedUsers));
-
-setError("");
-setMessage(`Welcome, ${name.trim()}! Your registration was successful.`);
-setName("");
-setEmail("");
-setPassword("");
-setConfirmPassword("");
-navigate("/login");
+        setError("");
+        setMessage(`Welcome, ${name.trim()}! Your registration was successful.`);
+        setName("");
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+        navigate("/login");
     }
 
     return (
@@ -106,13 +110,13 @@ navigate("/login");
                                 required
                                 minLength={8}
                             />
-                            <button className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-sm font-bold text-violet-300 hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-violet-300" type="button" onClick={() => setShowPassword((visible) => !visible)}aria-label={showPassword ? "Hide passwords" : "Show passwords"}>{showPassword ? "Hide" : "Show"}</button>
+                            <button className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-sm font-bold text-violet-300 hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-violet-300" type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? "Hide passwords" : "Show passwords"}>{showPassword ? "Hide" : "Show"}</button>
                         </div>
                         <span className="text-xs leading-relaxed text-slate-400">Use at least 8 characters for a stronger password.</span>
                     </div>
                     <div className="grid gap-2">
                         <label className="text-sm font-semibold text-slate-200" htmlFor="confirm-password">Confirm password</label>
-                        <input className="min-h-12 rounded-xl border border-white/15 bg-slate-950 px-4 text-white outline-none transition placeholder:text-slate-600 focus:border-violet-400 focus:ring-4 focus:ring-violet-400/15" id="confirm-password" type={showPassword ? "text" : "password"} value={confirmPassword} autoComplete="new-password" placeholder="Enter your password again" onChange={(event) => setConfirmPassword(event.target.value)}required minLength={8}/>
+                        <input className="min-h-12 rounded-xl border border-white/15 bg-slate-950 px-4 text-white outline-none transition placeholder:text-slate-600 focus:border-violet-400 focus:ring-4 focus:ring-violet-400/15" id="confirm-password" type={showPassword ? "text" : "password"} value={confirmPassword} autoComplete="new-password" placeholder="Enter your password again" onChange={(event) => setConfirmPassword(event.target.value)} required minLength={8}/>
                     </div>
                     {error && (
                         <p className="rounded-xl border border-red-300/20 bg-red-400/10 px-4 py-3 text-sm leading-relaxed text-red-200" role="alert">{error}</p>)}
@@ -126,4 +130,5 @@ navigate("/login");
         </main>
     );
 }
+
 export default Register;

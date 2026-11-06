@@ -1,11 +1,20 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useSelector } from "react-redux";
+import { getUserRole } from "../redux/authSlice";
+
 function ProtectedRoute({ children, allowedRoles }) {
-    const { loggedInUser } = useAuth();
-    if (!loggedInUser) {
+    const loggedInUser = useSelector((state) => state.auth.loggedInUser);
+    const role = getUserRole(loggedInUser);
+
+    if (!role) {
         return <Navigate to="/login" replace />;
     }
-    if (!allowedRoles.includes(loggedInUser.role)) {return <Navigate to="/" replace />;}
+
+    if (!allowedRoles.includes(role)) {
+        return <Navigate to={role === "admin" ? "/admin" : "/"} replace />;
+    }
+
     return children;
 }
+
 export default ProtectedRoute;

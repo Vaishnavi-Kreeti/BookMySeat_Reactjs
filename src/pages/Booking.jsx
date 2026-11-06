@@ -1,13 +1,20 @@
-import { useLocation, useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 function Booking() {
-  const location = useLocation();
   const navigate = useNavigate();
   const { id } = useParams();
-  const savedMovies =useSelector((state)=>state.movies.movies);
+  const booking = useSelector((state) => state.booking.currentBooking);
+  const savedMovies = useSelector((state) => state.movies.movies);
   const movie = savedMovies.find((movie) => movie.id === Number(id));
-  const { selectedSeats, date, time, hallName, totalPrice } = location.state || {};
-  if (!movie || !selectedSeats?.length) {
+  const isMatchingDraft =
+    booking?.movieId === Number(id) && booking.status === "draft";
+  const selectedSeats = isMatchingDraft ? booking.selectedSeats : [];
+  const date = isMatchingDraft ? booking.date : "";
+  const time = isMatchingDraft ? booking.time : "";
+  const hallName = isMatchingDraft ? booking.hallName : "";
+  const totalPrice = selectedSeats.length * 200;
+
+  if (!movie || !isMatchingDraft || selectedSeats.length === 0) {
     return (
       <main className="grid min-h-screen place-items-center bg-slate-950 px-5 text-center text-white">
         <div>
@@ -34,7 +41,7 @@ function Booking() {
           <span className="text-slate-300">Total</span>
           <span className="text-2xl font-black">₹{Number(totalPrice).toFixed(2)}</span>
         </div>
-        <button className="mt-6 w-full rounded-xl bg-violet-500 px-5 py-3.5 font-bold transition hover:bg-violet-400" onClick={() => navigate(`/moviedetails/${id}/payment`, { state: { selectedSeats, date, time, hallName, totalPrice } })}>
+        <button className="mt-6 w-full rounded-xl bg-violet-500 px-5 py-3.5 font-bold transition hover:bg-violet-400" onClick={() => navigate(`/moviedetails/${id}/payment`)}>
           Proceed to payment
         </button>
       </section>

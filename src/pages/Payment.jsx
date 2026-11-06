@@ -1,12 +1,21 @@
-import { useLocation, useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { confirmBooking } from '../redux/bookingSlice';
 function Payment() {
-  const location = useLocation();
   const navigate = useNavigate();
   const { id } = useParams();
+  const dispatch = useDispatch();
+  const booking = useSelector((state) => state.booking.currentBooking);
   const savedMovies = useSelector((state)=>state.movies.movies);
   const movie = savedMovies.find((movie) => movie.id === Number(id));
-  const { selectedSeats, date, time, hallName, totalPrice } = location.state || {};
+  const isMatchingDraft =
+    booking?.movieId === Number(id) && booking.status === "draft";
+  const selectedSeats = isMatchingDraft ? booking.selectedSeats : [];
+  const date = isMatchingDraft ? booking.date : "";
+  const time = isMatchingDraft ? booking.time : "";
+  const hallName = isMatchingDraft ? booking.hallName : "";
+  const totalPrice = selectedSeats.length * 200;
+
   if (!movie) {
     return (
       <main className="grid min-h-screen place-items-center bg-slate-950 px-5 text-center text-white">
@@ -14,7 +23,7 @@ function Payment() {
       </main>
     );
   }
-  if (!selectedSeats || selectedSeats.length === 0) {
+  if (!isMatchingDraft || selectedSeats.length === 0) {
     return (
       <main className="grid min-h-screen place-items-center bg-slate-950 px-5 text-center text-white">
         <div><h1 className="text-3xl font-bold">No seats selected</h1><p className="mt-3 text-slate-400">Please go back and select seats before proceeding to payment.</p><button className="mt-5 rounded-xl bg-violet-500 px-5 py-3 font-semibold" onClick={() => navigate(`/moviedetails/${id}/seats`)}>Back to seat selection</button></div>
@@ -23,49 +32,8 @@ function Payment() {
   }
 
   function handlePayment() {
-    const bookingKey = `bookedSeats-${id}-${date}-${time}-${hallName}`;
-
-    let existingSeats = [];
-
-    try {
-      existingSeats = JSON.parse(
-        localStorage.getItem(bookingKey) || "[]"
-      );
-    } catch (error) {
-      console.error("Invalid booked seats data:", error);
-    }
-
-    // Check whether any selected seat is already booked
-    const alreadyBooked = selectedSeats.some((seat) =>
-      existingSeats.includes(seat)
-    );
-
-    if (alreadyBooked) {
-      alert("Some seats are already booked. Please select different seats.");
-      navigate(`/moviedetails/${id}/showtimes`);
-      return;
-    }
-
-    // Save the newly booked seats
-    const updatedSeats = [...existingSeats, ...selectedSeats];
-
-    localStorage.setItem(
-      bookingKey,
-      JSON.stringify(updatedSeats)
-    );
-
-    // Clear the temporary seat selection
-    localStorage.removeItem(`selectedSeats-${id}-${date}-${time}-${hallName}`);
-
-    // Navigate to the ticket page
-    navigate(`/moviedetails/${id}/ticket`, {
-      state: {
-        selectedSeats,
-        date,
-        time, hallName,
-        totalPrice,
-      },
-    });
+    dispatch(confirmBooking());
+    navigate(`/moviedetails/${id}/ticket`);
   }
 
   return (
